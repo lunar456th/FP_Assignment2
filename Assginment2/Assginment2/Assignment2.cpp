@@ -1,3 +1,5 @@
+/* 버킷이랑 노드 크기를 얼마로 줘야 할지 잘 모르겠다. */
+
 #include <iostream>
 #include <fstream>
 #include <cstdio>
@@ -9,14 +11,14 @@
 #include <conio.h>
 
 #define EPS 0.00001
-#define NODESIZE 13
+#define NODESIZE 511
 
-#define BUCKETSIZE 2
+#define BUCKETSIZE 512
 #define INIT_GLOB_DEPTH 0
 
 using namespace std;
 
-struct BPlusTreeNode
+struct BPlusTreeNode // 8Bytes
 {
 	float * data;
 	BPlusTreeNode **child_ptr;
@@ -31,7 +33,7 @@ float split_child(BPlusTreeNode *x, int i);
 void insertionSort(BPlusTreeNode * x, float a, int b);
 void insert(float a, int b);
 
-class Bucket {
+class Bucket { // 32Bytes
 	int depth, size;
 	map<int, int> values;
 public:
@@ -65,13 +67,17 @@ public:
 	void display(bool duplicates);
 };
 
+
+
+
+
 int main(void)
 {
 	bool show_duplicate_buckets;
 	int id, n, i, block;
 	float score;
 	string choice;
-	ifstream fin("input.txt");
+	ifstream fin("input2.txt"); // input.txt는 작은 데이터, input2.txt는 큰 데이터
 
 	show_duplicate_buckets = 0; // 1이면 중복인 것도 출력 0이면 안출력
 
@@ -94,14 +100,19 @@ int main(void)
 		{
 			d.insert(id, block, 0); // 확장 해쉬 삽입
 		}
+		//printf("%d\n", i);
 	}
 
 	traverse(root); // B+트리 출력
 	d.display(show_duplicate_buckets); // 확장해쉬 출력
-	printf("%d\n%d\n", sizeof(Bucket), sizeof(root->child_ptr[1]));
+	printf("%d\n%d\n", sizeof(Bucket), sizeof(root->child_ptr[0]));
 	_getch();
 	return 0;
 }
+
+
+
+
 
 BPlusTreeNode * init()
 {
@@ -456,9 +467,13 @@ void Directory::insert(int key, int value, bool reinserted)
 	if (status == 1)
 	{
 		if (!reinserted)
-			cout << "Inserted key " << key << " in bucket " << bucket_id(bucket_no) << endl;
+		{
+			//cout << "Inserted key " << key << " in bucket " << bucket_id(bucket_no) << endl;
+		}
 		else
-			cout << "Moved key " << key << " to bucket " << bucket_id(bucket_no) << endl;
+		{
+			//cout << "Moved key " << key << " to bucket " << bucket_id(bucket_no) << endl;
+		}
 	}
 	else if (status == 0)
 	{
@@ -467,14 +482,14 @@ void Directory::insert(int key, int value, bool reinserted)
 	}
 	else
 	{
-		cout << "Key " << key << " already exists in bucket " << bucket_id(bucket_no) << endl;
+		//cout << "Key " << key << " already exists in bucket " << bucket_id(bucket_no) << endl;
 	}
 }
 
 bool Directory::search(int key)
 {
 	int bucket_no = hash(key);
-	cout << "Searching key " << key << " in bucket " << bucket_id(bucket_no) << endl;
+	//cout << "Searching key " << key << " in bucket " << bucket_id(bucket_no) << endl;
 	return buckets[bucket_no]->search(key);
 }
 
@@ -527,12 +542,12 @@ bool Bucket::search(int key)
 	it = values.find(key);
 	if (it != values.end())
 	{
-		cout << "Value = " << it->second << endl;
+		//cout << "Value = " << it->second << endl;
 		return true;
 	}
 	else
 	{
-		cout << "This key does not exists" << endl;
+		//cout << "This key does not exists" << endl;
 		return false;
 	}
 }

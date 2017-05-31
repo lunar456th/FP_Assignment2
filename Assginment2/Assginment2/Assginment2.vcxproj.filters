@@ -23,5 +23,8 @@
     <Text Include="input.txt">
       <Filter>리소스 파일</Filter>
     </Text>
+    <Text Include="input2.txt">
+      <Filter>리소스 파일</Filter>
+    </Text>
   </ItemGroup>
 </Project>
