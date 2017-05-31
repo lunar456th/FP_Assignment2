@@ -1,18 +1,3 @@
-/* ¹öÅ¶ÀÌ¶û ³ëµå Å©±â¸¦ ¾ó¸¶·Î Áà¾ß ÇÒÁö Àß ¸ð¸£°Ú´Ù. */
-
-#include <iostream>
-#include <fstream>
-#include <cstdio>
-#include <cmath>
-#include <string>
-#include <vector>
-#include <set>
-#include <map>
-#include <conio.h>
-
-#define EPS 0.00001
-#define NODESIZE 511
-
 #define BUCKETSIZE 512
 #define INIT_GLOB_DEPTH 0
 
@@ -77,9 +62,9 @@ int main(void)
 	int id, n, i, block;
 	float score;
 	string choice;
-	ifstream fin("input2.txt"); // input.txt´Â ÀÛÀº µ¥ÀÌÅÍ, input2.txt´Â Å« µ¥ÀÌÅÍ
+	ifstream fin("input2.txt"); // input.txtï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, input2.txtï¿½ï¿½ Å« ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	show_duplicate_buckets = 0; // 1ÀÌ¸é Áßº¹ÀÎ °Íµµ Ãâ·Â 0ÀÌ¸é ¾ÈÃâ·Â
+	show_duplicate_buckets = 0; // 1ï¿½Ì¸ï¿½ ï¿½ßºï¿½ï¿½ï¿½ ï¿½Íµï¿½ ï¿½ï¿½ï¿½ 0ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
 
 	root = init();
 	Directory d(INIT_GLOB_DEPTH, BUCKETSIZE);
@@ -90,15 +75,15 @@ int main(void)
 	fin >> n;
 	for (i = 0; i < n; i++)
 	{
-		//cout << "ÇÐ¹ø Á¡¼ö ºí·Ï¹øÈ£ ¼ø¼­´ë·Î ÇÑ ·¹ÄÚµå¾¿ ÀÔ·ÂÇÏ¼¼¿ä.\n";
+		//cout << "ï¿½Ð¹ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ï¹ï¿½È£ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Úµå¾¿ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½.\n";
 		fin >> id >> score >> block;
-		if (!search(root, score)) // B+Æ®¸® Áßº¹ ¹æÁö
+		if (!search(root, score)) // B+Æ®ï¿½ï¿½ ï¿½ßºï¿½ ï¿½ï¿½ï¿½ï¿½
 		{
-			insert(score, block); // B+Æ®¸® »ðÀÔ
+			insert(score, block); // B+Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
-		if (!d.search(id)) // È®ÀåÇØ½¬ Áßº¹ ¹æÁö
+		if (!d.search(id)) // È®ï¿½ï¿½ï¿½Ø½ï¿½ ï¿½ßºï¿½ ï¿½ï¿½ï¿½ï¿½
 		{
-			d.insert(id, block, 0); // È®Àå ÇØ½¬ »ðÀÔ
+			d.insert(id, block, 0); // È®ï¿½ï¿½ ï¿½Ø½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 		//printf("%d\n", i);
 	}
@@ -109,8 +94,8 @@ int main(void)
 	}
 	printf("\n");
 
-	traverse(root); // B+Æ®¸® Ãâ·Â
-	d.display(show_duplicate_buckets); // È®ÀåÇØ½¬ Ãâ·Â
+	traverse(root); // B+Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½
+	d.display(show_duplicate_buckets); // È®ï¿½ï¿½ï¿½Ø½ï¿½ ï¿½ï¿½ï¿½
 	printf("%d\n%d\n", sizeof(Bucket), sizeof(root->child_ptr[0]));
 	_getch();
 	return 0;
@@ -226,7 +211,7 @@ float split_child(BPlusTreeNode *x, int i)
 		np1->child_ptr[np1->n] = x;
 		np1->child_ptr[np1->n + 1] = np3;
 		np1->n++;
-		x->child_ptr[NODESIZE - 1] = np3; // ¸®ÇÁ ³ëµå³¢¸® ´Ü¹æÇâ ¿¬°á
+		x->child_ptr[NODESIZE - 1] = np3; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½å³¢ï¿½ï¿½ ï¿½Ü¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		root = np1;
 	}
 	else
@@ -250,7 +235,7 @@ float split_child(BPlusTreeNode *x, int i)
 			}
 		}
 		x->child_ptr[i + 1] = np3;
-		y->child_ptr[NODESIZE - 1] = np3; // ¸®ÇÁ ³ëµå³¢¸® ´Ü¹æÇâ ¿¬°á
+		y->child_ptr[NODESIZE - 1] = np3; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½å³¢ï¿½ï¿½ ï¿½Ü¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	}
 	return mid;
 }
