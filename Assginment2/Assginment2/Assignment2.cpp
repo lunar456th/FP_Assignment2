@@ -103,6 +103,12 @@ int main(void)
 		//printf("%d\n", i);
 	}
 
+	for (int asd = 0; asd < root->n; asd++)
+	{
+		printf("%d %d, ", sizeof(*(root->child_ptr[asd])), root->child_ptr[asd]->n);
+	}
+	printf("\n");
+
 	traverse(root); // B+트리 출력
 	d.display(show_duplicate_buckets); // 확장해쉬 출력
 	printf("%d\n%d\n", sizeof(Bucket), sizeof(root->child_ptr[0]));
@@ -220,6 +226,7 @@ float split_child(BPlusTreeNode *x, int i)
 		np1->child_ptr[np1->n] = x;
 		np1->child_ptr[np1->n + 1] = np3;
 		np1->n++;
+		x->child_ptr[NODESIZE - 1] = np3; // 리프 노드끼리 단방향 연결
 		root = np1;
 	}
 	else
@@ -243,6 +250,7 @@ float split_child(BPlusTreeNode *x, int i)
 			}
 		}
 		x->child_ptr[i + 1] = np3;
+		y->child_ptr[NODESIZE - 1] = np3; // 리프 노드끼리 단방향 연결
 	}
 	return mid;
 }
