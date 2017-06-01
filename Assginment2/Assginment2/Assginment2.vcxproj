@@ -157,6 +157,7 @@
   <ItemGroup>
     <Text Include="input.txt" />
     <Text Include="input2.txt" />
+    <Text Include="input3.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Students.hash" />

@@ -34,6 +34,9 @@
     <Text Include="input2.txt">
       <Filter>리소스 파일</Filter>
     </Text>
+    <Text Include="input3.txt">
+      <Filter>리소스 파일</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <None Include="Students.hash">
