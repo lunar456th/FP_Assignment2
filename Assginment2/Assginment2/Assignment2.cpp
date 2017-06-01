@@ -1,5 +1,19 @@
-#define BUCKETSIZE 512
+#include <iostream>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include <conio.h>
+
+#define NODESIZE 11
+#define EPS 0.0001
+
+#define BUCKETSIZE 11
 #define INIT_GLOB_DEPTH 0
+#define SHOW_DUPLICATE_BUCKETS 0
 
 using namespace std;
 
@@ -12,11 +26,12 @@ struct BPlusTreeNode // 8Bytes
 }*root = NULL, *np = NULL, *x = NULL;
 
 BPlusTreeNode * init();
-bool search(BPlusTreeNode * p, float a);
-void traverse(BPlusTreeNode *p);
-float split_child(BPlusTreeNode *x, int i);
-void insertionSort(BPlusTreeNode * x, float a, int b);
 void insert(float a, int b);
+void insertionSort(BPlusTreeNode * x, float a, int b);
+bool search(BPlusTreeNode * p, float a);
+void traverse(BPlusTreeNode * p);
+float split_child(BPlusTreeNode * x, int i);
+BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k);
 
 class Bucket { // 32Bytes
 	int depth, size;
@@ -58,19 +73,16 @@ public:
 
 int main(void)
 {
-	bool show_duplicate_buckets;
-	int id, n, i, block;
+	int id, n, i, block, k;
 	float score;
 	string choice;
-	ifstream fin("input2.txt"); // input.txt�� ��� ������, input2.txt�� ū ������
-
-	show_duplicate_buckets = 0; // 1�̸� �ߺ��� �͵� ��� 0�̸� �����
+	ifstream fin("input.txt"); // input.txt�� ��� ������, input2.txt�� ū ������
 
 	root = init();
 	Directory d(INIT_GLOB_DEPTH, BUCKETSIZE);
-	cout << endl << "Initialized directory structure" << endl;
+	//cout << endl << "Initialized directory structure" << endl;
 
-	cout << "enter the no of elements to be inserted\n";
+	//cout << "enter the no of elements to be inserted\n";
 
 	fin >> n;
 	for (i = 0; i < n; i++)
@@ -81,22 +93,30 @@ int main(void)
 		{
 			insert(score, block); // B+Ʈ�� ����
 		}
-		if (!d.search(id)) // Ȯ���ؽ� �ߺ� ����
-		{
+		//if (!d.search(id)) // Ȯ���ؽ� �ߺ� ����
+		//{
 			d.insert(id, block, 0); // Ȯ�� �ؽ� ����
-		}
+		//}
 		//printf("%d\n", i);
 	}
 
-	for (int asd = 0; asd < root->n; asd++)
-	{
-		printf("%d %d, ", sizeof(*(root->child_ptr[asd])), root->child_ptr[asd]->n);
-	}
-	printf("\n");
+	//for (int asd = 0; asd < root->n; asd++)
+	//{
+	//	printf("%d %d, ", sizeof(*(root->child_ptr[asd])), root->child_ptr[asd]->n);
+	//}
+	//printf("\n");
 
 	traverse(root); // B+Ʈ�� ���
-	d.display(show_duplicate_buckets); // Ȯ���ؽ� ���
+	d.display(SHOW_DUPLICATE_BUCKETS); // Ȯ���ؽ� ���
 	printf("%d\n%d\n", sizeof(Bucket), sizeof(root->child_ptr[0]));
+	cout << "k를 입력하시오: ";
+	cin >> k;
+	BPlusTreeNode * kthNode = findKthNode(root, k);
+	for (int s = 0; s < kthNode->n; s++)
+	{
+		printf("%1.f(%0.d) ", kthNode->data[s], kthNode->child_ptr[s]);
+	}
+	cout << endl;
 	_getch();
 	return 0;
 }
@@ -344,6 +364,21 @@ void insert(float a, int b)
 	insertionSort(x, a, b);
 	x->n++;
 }
+
+BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k)
+{
+	BPlusTreeNode * temp = x;
+	while (temp->child_ptr[0] != NULL && temp->leaf == false)
+	{
+		temp = temp->child_ptr[0];
+	}
+	for (int i = 0; i < k; i++)
+	{
+		temp = temp->child_ptr[NODESIZE - 1];
+	}
+	return temp;
+}
+
 
 
 Directory::Directory(int depth, int bucket_size)
