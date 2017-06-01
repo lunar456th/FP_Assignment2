@@ -34,6 +34,7 @@ void traverse(BPlusTreeNode * p);
 float split_child(BPlusTreeNode * x, int i);
 BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k);
 int writeIndexFile(FILE * fout, BPlusTreeNode * x);
+void recursion(BPlusTreeNode * x, float a, int b);
 
 class Bucket { // sizeof(Bucket) = 20bytes
 	int depth, size;
@@ -132,7 +133,7 @@ int main(void)
 	BPlusTreeNode * kthNode = findKthNode(root, k);
 	for (int s = 0; s < kthNode->n; s++)
 	{
-		printf("%1.f(%0.d) ", kthNode->data[s], kthNode->child_ptr[s]);
+		printf("%1.f(%0.d) ", kthNode->data[s], (int)kthNode->child_ptr[s]);
 	}
 	cout << endl;
 	_getch();
@@ -230,7 +231,29 @@ float split_child(BPlusTreeNode *x, int i) // x라는 노드를 주면 걔를 �
 	BPlusTreeNode *np1, *np3, *y;
 	np3 = init();
 	np3->leaf = true;
-	if (i == -1)
+	if (i == -2)
+	{
+		mid = x->data[(NODESIZE / 2 - 1)];
+		np1 = x->parent_ptr;
+		for (j = (NODESIZE / 2); j < NODESIZE - 1; j++)
+		{
+			np3->data[j - (NODESIZE / 2)] = x->data[j];
+			np3->child_ptr[j - (NODESIZE / 2)] = x->child_ptr[j];
+			np3->n++;
+			x->data[j] = 0;
+			x->child_ptr[j] = 0;
+			x->n--;
+		}
+		for (int k = NODESIZE - 2; k > i; k--)
+		{
+			if (np1->child_ptr[k] != NULL)
+			{
+				np1->child_ptr[k + 1] = np1->child_ptr[k];
+			}
+		}
+		np1->child_ptr[i + 1] = np3;
+	}
+	else if (i == -1)
 	{
 		mid = x->data[(NODESIZE / 2 - 1)];
 		np1 = init();
@@ -321,71 +344,37 @@ void insertionSort(BPlusTreeNode * x, float a, int b) // 한 노드 내에서 �
 void insert(float a, int b)
 {
 	int i;
-	float temp;
+	float mid;
 	x = root;
 	if (x->leaf)
 	{
-		if (x->n != NODESIZE - 1)
+		if (x->n == NODESIZE - 1)
 		{
-			insertionSort(x, a, b);
-			x->n++;
-			return;
+			mid = split_child(x, -1);
 		}
-		else
-		{
-			temp = split_child(x, -1);
-			x = root;
-			if (a >= x->data[0])
-			{
-				for (i = 0; i < (x->n); i++)
-				{
-					if ((a > x->data[i]) && (a < x->data[i + 1]))
-					{
-						i++;
-						break;
-					}
-				}
-			}
-			x = x->child_ptr[i];
-		}
+		insertionSort(x, a, b);
+		x->n++;
+		return;
 	}
 	else
 	{
 		while (!x->leaf)
 		{
-			if (a >= x->data[0])
+			for (i = 0; i < x->n; i++)
 			{
-				for (i = 0; i < (x->n); i++)
+				if (a <= x->data[i])
 				{
-					if ((a > x->data[i]) && (a < x->data[i + 1]))
-					{
-						i++;
-						break;
-					}
+					x = x->child_ptr[i];
+					break;
 				}
 			}
-			if (x->child_ptr[i] != NULL && (x->child_ptr[i])->n == NODESIZE - 1)
-			{
-				temp = split_child(x, i);
-				if (x->n == NODESIZE - 1)
-				{
-					float temp2 = split_child(x, -1);
-					// insertionSort(root, temp2, b);
-				}
-				insertionSort(x, temp, b);
-				x->n++;
-				//continue;
-				break;
-			}
-			else if (x->child_ptr[i] != NULL)
+			if (i == x->n && x->child_ptr[i] != NULL)
 			{
 				x = x->child_ptr[i];
 			}
-		}
+		} // x가 리프노드가 되면 나온다.
+		recursion(x, a, b); // 리컬젼으로 패런트 타고 올라가면서 분할해서 중간값 넣으면서 내려온다.
 	}
-	insertionSort(x, a, b);
-	x->n++;
-
 }
 
 BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k)
@@ -412,6 +401,28 @@ int writeIndexFile(FILE * fout, BPlusTreeNode * x)
 		}
 	}
 	return 0;
+}
+
+void recursion(BPlusTreeNode * x, float a, int b) // 후위순회 이용한 리컬젼 스플릿 // 문제가 있는것같음.
+{
+	if (x->parent_ptr != NULL)
+	{
+		if (x->parent_ptr->n == NODESIZE - 1)
+		{
+			recursion(x->parent_ptr, a, b);
+		}
+		float mid = split_child(x, -2);
+		insertionSort(x, a, b);
+		x->n++;
+		return;
+	}
+	else
+	{
+		float mid = split_child(x, -1);
+		insertionSort(x, a, b);
+		x->n++;
+		return;
+	}
 }
 
 
