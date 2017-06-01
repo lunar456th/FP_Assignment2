@@ -32,6 +32,7 @@ bool search(BPlusTreeNode * p, float a);
 void traverse(BPlusTreeNode * p);
 float split_child(BPlusTreeNode * x, int i);
 BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k);
+int writeIndexFile(FILE * fout, BPlusTreeNode * x);
 
 class Bucket { // 32Bytes
 	int depth, size;
@@ -48,7 +49,9 @@ public:
 	map<int, int> copy(void);
 	void clear(void);
 	void display(void);
+	int writeHashFile(FILE * fout);
 };
+
 
 class Directory {
 	int global_depth, bucket_size;
@@ -65,7 +68,9 @@ public:
 	void insert(int key, int value, bool reinserted);
 	bool search(int key);
 	void display(bool duplicates);
+	int writeHashFile(FILE * fout);
 };
+
 
 
 
@@ -77,6 +82,8 @@ int main(void)
 	float score;
 	string choice;
 	ifstream fin("input.txt"); // input.txt�� ��� ������, input2.txt�� ū ������
+	FILE * fidx = fopen("Students_score.idx", "wb");
+	FILE * fhash = fopen("Students.hash", "wb");
 
 	root = init();
 	Directory d(INIT_GLOB_DEPTH, BUCKETSIZE);
@@ -98,6 +105,18 @@ int main(void)
 			d.insert(id, block, 0); // Ȯ�� �ؽ� ����
 		//}
 		//printf("%d\n", i);
+	}
+
+	// make .hash file
+	if (d.writeHashFile(fhash) == -1)
+	{
+		cout << ".hash file error." << endl;
+	}
+
+	// make .idx file
+	if (writeIndexFile(fidx, root) == -1)
+	{
+		cout << ".idx file error." << endl;
 	}
 
 	//for (int asd = 0; asd < root->n; asd++)
@@ -379,6 +398,22 @@ BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k)
 	return temp;
 }
 
+int writeIndexFile(FILE * fout, BPlusTreeNode * x)
+{
+	for (BPlusTreeNode * firstNode = findKthNode(root, 0); firstNode->child_ptr[NODESIZE - 1] != NULL; firstNode = firstNode->child_ptr[NODESIZE - 1])
+	{
+		if (fwrite(firstNode, sizeof(*firstNode), 1, fout) == -1)
+		{
+			return -1;
+		}
+	}
+	return 0;
+}
+
+
+
+
+
 
 
 Directory::Directory(int depth, int bucket_size)
@@ -526,7 +561,7 @@ void Directory::display(bool duplicates)
 	int i, j, d;
 	string s;
 	set<string> shown;
-	cout << "Global depth : " << global_depth << endl;
+	//cout << "Global depth : " << global_depth << endl;
 	for (i = 0; i<buckets.size(); i++)
 	{
 		d = buckets[i]->getDepth();
@@ -536,11 +571,42 @@ void Directory::display(bool duplicates)
 			shown.insert(s);
 			for (j = d; j <= global_depth; j++)
 				cout << " ";
-			cout << s << " => ";
+			cout << s << " ~~~> ";
 			buckets[i]->display();
 		}
 	}
 }
+
+int Directory::writeHashFile(FILE * fout) {
+	int i, j, d;
+	string s;
+	set<string> shown;
+	//cout << "Global depth : " << global_depth << endl;
+	for (i = 0; i<buckets.size(); i++)
+	{
+		d = buckets[i]->getDepth();
+		s = bucket_id(i);
+		if (shown.find(s) == shown.end())
+		{
+			shown.insert(s);
+			for (j = d; j <= global_depth; j++)
+				cout << " ";
+//			cout << s << " ~~~> ";
+			if (fwrite(&s, sizeof(s), 1, fout) == -1)
+			{
+				return -1;
+			}
+			if (buckets[i]->writeHashFile(fout) == -1)
+			{
+				return -1;
+			}
+		}
+	}
+	return 0;
+
+}
+
+
 
 
 
@@ -630,4 +696,13 @@ void Bucket::display()
 	for (it = values.begin(); it != values.end(); it++)
 		cout << it->first << "(" << it->second << ") ";
 	cout << endl;
+}
+
+int Bucket::writeHashFile(FILE * fout)
+{
+	if (fwrite(this, sizeof(this), 1, fout) == -1)
+	{
+		return -1;
+	}
+	return 0;
 }
