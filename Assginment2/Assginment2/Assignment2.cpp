@@ -7,6 +7,7 @@
 #include <set>
 #include <map>
 #include <conio.h>
+#include <math.h>
 
 #define NODESIZE 5
 #define EPS 0.0001
@@ -34,6 +35,7 @@ void traverse(BPlusTreeNode * p);
 float split_child(BPlusTreeNode * x, int i);
 BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k);
 int writeIndexFile(FILE * fout, BPlusTreeNode * x);
+void recursion(BPlusTreeNode * x, float a, int b);
 
 class Bucket { // sizeof(Bucket) = 20bytes
 	int depth, size;
@@ -82,7 +84,7 @@ int main(void)
 	int id, n, i, block, k;
 	float score;
 	string choice;
-	ifstream fin("input.txt"); // input.txt�� ��� ������, input2.txt�� ū ������
+	ifstream fin("input4.txt"); // input.txt�� ��� ������, input2.txt�� ū ������
 	FILE * fidx = fopen("Students_score.idx", "wb");
 	FILE * fhash = fopen("Students.hash", "wb");
 
@@ -103,9 +105,9 @@ int main(void)
 		}
 		//if (!d.search(id)) // Ȯ���ؽ� �ߺ� ����
 		//{
-			d.insert(id, block, 0); // Ȯ�� �ؽ� ����
-		//}
-		//printf("%d\n", i);
+		d.insert(id, block, 0); // Ȯ�� �ؽ� ����
+	//}
+	//printf("%d\n", i);
 	}
 
 	// make .hash file
@@ -132,7 +134,7 @@ int main(void)
 	BPlusTreeNode * kthNode = findKthNode(root, k);
 	for (int s = 0; s < kthNode->n; s++)
 	{
-		printf("%1.f(%0.d) ", kthNode->data[s], kthNode->child_ptr[s]);
+		printf("%1.f(%0.d) ", kthNode->data[s], (int)kthNode->child_ptr[s]);
 	}
 	cout << endl;
 	_getch();
@@ -196,6 +198,10 @@ bool search(BPlusTreeNode * p, float a)
 			{
 				p = p->child_ptr[i];
 			}
+			else if (i == p->n)
+			{
+				p = p->child_ptr[i - 1];
+			}
 		}
 	}
 }
@@ -225,12 +231,87 @@ void traverse(BPlusTreeNode *p)
 
 float split_child(BPlusTreeNode *x, int i) // x라는 노드를 주면 걔를 두개~세개로 쪼개서 중간값 반환
 {
-	int j;
+	int j, k;
 	float mid;
 	BPlusTreeNode *np1, *np3, *y;
 	np3 = init();
-	np3->leaf = true;
-	if (i == -1)
+	if (i == -2)
+	{
+		mid = x->data[(NODESIZE / 2 - 1)];
+		np1 = x->parent_ptr;
+		np1->leaf = false;
+		//x->parent_ptr = np1;
+		np3->parent_ptr = np1;
+		np3->leaf = x->leaf;
+		//x->leaf = true;
+		for (j = (NODESIZE / 2); j < NODESIZE - 1; j++)
+		{
+			np3->data[j - (NODESIZE / 2)] = x->data[j];
+			np3->child_ptr[j - (NODESIZE / 2)] = x->child_ptr[j];
+			if (!x->leaf)
+			{
+				x->child_ptr[j]->parent_ptr = np3;
+			}
+			np3->n++;
+			x->data[j] = 0;
+			x->child_ptr[j] = 0;
+			x->n--;
+		}
+		if (x->data[0] > x->parent_ptr->data[x->parent_ptr->n - 1] && np1->child_ptr[NODESIZE - 1] != NULL)
+		{
+			x->parent_ptr = np1->child_ptr[NODESIZE - 1];
+		}
+		if (!x->leaf)
+		{
+			for (k = NODESIZE - 2; x->parent_ptr->child_ptr[k] != x; k--)
+			{
+				np1->child_ptr[k + 1] = np1->child_ptr[k];
+			}
+			np1->child_ptr[k + 1] = np3;
+		}
+		else if(np1->child_ptr[NODESIZE - 1] != NULL && !np1->child_ptr[NODESIZE - 1]->leaf)
+		{
+			for (k = np1->child_ptr[NODESIZE - 1]->n - 1; k>=0; k--)
+			{
+				if (np1->child_ptr[NODESIZE - 1]->child_ptr[k]->data[0] < x->data[0])
+				{
+					break;
+				}
+				np1->child_ptr[NODESIZE - 1]->child_ptr[k + 1] = np1->child_ptr[NODESIZE - 1]->child_ptr[k];
+			}
+			//np1->child_ptr[NODESIZE - 1]->child_ptr[k + 1] = x;
+			np1->child_ptr[NODESIZE - 1]->child_ptr[k + 1] = np3;
+		}
+		else
+		{
+			for (k = NODESIZE - 2; np1->child_ptr[k] != x; k--)
+			{
+				np1->child_ptr[k + 1] = np1->child_ptr[k];
+			}
+			np1->child_ptr[k + 1] = np3;
+			np1->child_ptr[k] = x;
+		}
+		//if (x->leaf)
+		//{
+		x->child_ptr[NODESIZE - 1] = np3; // ���� ��峢�� �ܹ��� ����
+
+		//}
+		//for (int k = NODESIZE - 2; k > i; k--)
+		//{
+		//	if (np1->child_ptr[k] != NULL)
+		//	{
+		//		np1->child_ptr[k + 1] = np1->child_ptr[k];
+		//	}
+		//}
+		//np1->child_ptr[np1->n] = x;
+		//np1->child_ptr[np1->n + 1] = np3;
+//		np1->n++;
+		//if (!x->leaf)
+		//{
+		//	x->child_ptr[NODESIZE - 1] = np3; // ���� ��峢�� �ܹ��� ����
+		//}
+	}
+	else if (i == -1)
 	{
 		mid = x->data[(NODESIZE / 2 - 1)];
 		np1 = init();
@@ -243,18 +324,26 @@ float split_child(BPlusTreeNode *x, int i) // x라는 노드를 주면 걔를 �
 			np3->data[j - (NODESIZE / 2)] = x->data[j];
 			np3->child_ptr[j - (NODESIZE / 2)] = x->child_ptr[j];
 			np3->n++;
+			if (!x->leaf)
+			{
+				x->child_ptr[j]->parent_ptr = np3; // ���� ��峢�� �ܹ��� ����
+			}
 			x->data[j] = 0;
 			x->child_ptr[j] = 0;
 			x->n--;
 		}
+
+		np3->child_ptr[j - (NODESIZE / 2)] = x->child_ptr[j];
+		if (!x->leaf)
+		{
+			x->child_ptr[j]->parent_ptr = np3; // ���� ��峢�� �ܹ��� ����
+		}
+
+		x->child_ptr[NODESIZE - 1] = np3;
 		np1->data[0] = mid;
 		np1->child_ptr[np1->n] = x;
 		np1->child_ptr[np1->n + 1] = np3;
 		np1->n++;
-		if (!x->leaf)
-		{
-			x->child_ptr[NODESIZE - 1] = np3; // ���� ��峢�� �ܹ��� ����
-		}
 		root = np1;
 	}
 	else
@@ -262,6 +351,7 @@ float split_child(BPlusTreeNode *x, int i) // x라는 노드를 주면 걔를 �
 		y = x->child_ptr[i];
 		y->parent_ptr = x;
 		np3->parent_ptr = x;
+		np3->leaf = true;
 		mid = y->data[(NODESIZE / 2 - 1)];
 		for (j = (NODESIZE / 2); j < NODESIZE - 1; j++)
 		{
@@ -321,7 +411,7 @@ void insertionSort(BPlusTreeNode * x, float a, int b) // 한 노드 내에서 �
 void insert(float a, int b)
 {
 	int i;
-	float temp;
+	float mid;
 	x = root;
 	if (x->leaf)
 	{
@@ -329,63 +419,135 @@ void insert(float a, int b)
 		{
 			insertionSort(x, a, b);
 			x->n++;
-			return;
 		}
 		else
 		{
-			temp = split_child(x, -1);
-			x = root;
-			if (a >= x->data[0])
+			mid = split_child(x, -1);
+			//insertionSort(x, mid, b);
+			//x->n++;
+			if (a > x->data[x->n - 1])
 			{
-				for (i = 0; i < (x->n); i++)
-				{
-					if ((a > x->data[i]) && (a < x->data[i + 1]))
-					{
-						i++;
-						break;
-					}
-				}
+				insertionSort(x->child_ptr[NODESIZE - 1], a, b);
+				x->child_ptr[NODESIZE - 1]->n++;
 			}
-			x = x->child_ptr[i];
+			else
+			{
+				insertionSort(x, a, b);
+				x->n++;
+			}
 		}
 	}
 	else
 	{
 		while (!x->leaf)
 		{
-			if (a >= x->data[0])
+			for (i = 0; i < x->n; i++)
 			{
-				for (i = 0; i < (x->n); i++)
+				if (a <= x->data[i])
 				{
-					if ((a > x->data[i]) && (a < x->data[i + 1]))
-					{
-						i++;
-						break;
-					}
+					x = x->child_ptr[i];
+					break;
 				}
 			}
-			if (x->child_ptr[i] != NULL && (x->child_ptr[i])->n == NODESIZE - 1)
-			{
-				temp = split_child(x, i);
-				if (x->n == NODESIZE - 1)
-				{
-					float temp2 = split_child(x, -1);
-					// insertionSort(root, temp2, b);
-				}
-				insertionSort(x, temp, b);
-				x->n++;
-				//continue;
-				break;
-			}
-			else if (x->child_ptr[i] != NULL)
+			if (i == x->n && x->child_ptr[i] != NULL)
 			{
 				x = x->child_ptr[i];
 			}
+			else if (i == x->n)
+			{
+				x = x->child_ptr[i - 1];
+			}
+		} // x는 리프노드가 돼있을거임.
+		if (x->n == NODESIZE - 1)
+		{
+			recursion(x, a, b);
+			if (a > x->data[x->n - 1] && fabsf(a - x->data[x->n - 1]) > EPS)
+			{
+				if (x->child_ptr[NODESIZE - 1] != NULL)
+				{
+					insertionSort(x->child_ptr[NODESIZE - 1], a, b);
+					x->child_ptr[NODESIZE - 1]->n++;
+				}
+				//else
+				//{
+				//	//recursion(x, a, b);
+				//	insertionSort(x, a, b);
+				//	x->n++;
+				//}
+			}
+			else
+			{
+				insertionSort(x, a, b);
+				x->n++;
+			}
+		}
+		else
+		{
+			insertionSort(x, a, b);
+			x->n++;
+		}
+
+		//if (a >= x->data[0])
+		//{
+		//	for (i = 0; i < (x->n); i++)
+		//	{
+		//		if ((a > x->data[i]) && (a < x->data[i + 1]))
+		//		{
+		//			i++;
+		//			break;
+		//		}
+		//	}
+		//}
+		//if (x->child_ptr[i] != NULL && (x->child_ptr[i])->n == NODESIZE - 1)
+		//{
+		//	mid = split_child(x, i);
+		//	if (x->n == NODESIZE - 1)
+		//	{
+		//		float temp2 = split_child(x, -1);
+		//		// insertionSort(root, temp2, b);
+		//	}
+		//	insertionSort(x, mid, b);
+		//	x->n++;
+		//	//continue;
+		//	break;
+		//}
+		//else if (x->child_ptr[i] != NULL)
+		//{
+		//	x = x->child_ptr[i];
+		//}
+
+	}
+}
+
+void recursion(BPlusTreeNode * x, float a, int b)
+{
+	float mid;
+	if (x->parent_ptr != NULL)
+	{
+		if (x->parent_ptr->n == NODESIZE - 1)
+		{
+			recursion(x->parent_ptr, a, b);
+			//if (x->n == NODESIZE - 1)
+			//{
+			mid = split_child(x, -2);
+			insertionSort(x->parent_ptr, mid, b);
+			x->parent_ptr->n++;
+			//}
+			return;
+		}
+		else
+		{
+			mid = split_child(x, -2);
+			insertionSort(x->parent_ptr, mid, b);
+			x->parent_ptr->n++;
 		}
 	}
-	insertionSort(x, a, b);
-	x->n++;
-
+	else
+	{
+		float mid = split_child(x, -1);
+//		insertionSort(x, mid, b);
+//		x->n++;
+	}
 }
 
 BPlusTreeNode * findKthNode(BPlusTreeNode * x, int k)
@@ -470,7 +632,7 @@ void Directory::split(int bucket_no)
 	map<int, int>::iterator it;
 
 	local_depth = buckets[bucket_no]->increaseDepth();
-	if (local_depth>global_depth)
+	if (local_depth > global_depth)
 		grow();
 	pair_index = pairIndex(bucket_no, local_depth);
 	buckets[pair_index] = new Bucket(local_depth, bucket_size);
@@ -480,7 +642,7 @@ void Directory::split(int bucket_no)
 	dir_size = 1 << global_depth;
 	for (i = pair_index - index_diff; i >= 0; i -= index_diff)
 		buckets[i] = buckets[pair_index];
-	for (i = pair_index + index_diff; i<dir_size; i += index_diff)
+	for (i = pair_index + index_diff; i < dir_size; i += index_diff)
 		buckets[i] = buckets[pair_index];
 	for (it = temp.begin(); it != temp.end(); it++)
 		insert((*it).first, (*it).second, 1);
@@ -502,7 +664,7 @@ void Directory::merge(int bucket_no)
 		buckets[bucket_no] = buckets[pair_index];
 		for (i = bucket_no - index_diff; i >= 0; i -= index_diff)
 			buckets[i] = buckets[pair_index];
-		for (i = bucket_no + index_diff; i<dir_size; i += index_diff)
+		for (i = bucket_no + index_diff; i < dir_size; i += index_diff)
 			buckets[i] = buckets[pair_index];
 	}
 }
@@ -513,13 +675,13 @@ string Directory::bucket_id(int n)
 	string s;
 	d = buckets[n]->getDepth();
 	s = "";
-	while (n>0 && d>0)
+	while (n > 0 && d > 0)
 	{
 		s = (n % 2 == 0 ? "0" : "1") + s;
 		n /= 2;
 		d--;
 	}
-	while (d>0)
+	while (d > 0)
 	{
 		s = "0" + s;
 		d--;
@@ -566,7 +728,7 @@ void Directory::display(bool duplicates)
 	string s;
 	set<string> shown;
 	//cout << "Global depth : " << global_depth << endl;
-	for (i = 0; i<buckets.size(); i++)
+	for (i = 0; i < buckets.size(); i++)
 	{
 		d = buckets[i]->getDepth();
 		s = bucket_id(i);
@@ -586,7 +748,7 @@ int Directory::writeHashFile(FILE * fout) {
 	string s;
 	set<string> shown;
 	//cout << "Global depth : " << global_depth << endl;
-	for (i = 0; i<buckets.size(); i++)
+	for (i = 0; i < buckets.size(); i++)
 	{
 		d = buckets[i]->getDepth();
 		s = bucket_id(i);
@@ -595,7 +757,7 @@ int Directory::writeHashFile(FILE * fout) {
 			shown.insert(s);
 			for (j = d; j <= global_depth; j++)
 				cout << " ";
-//			cout << s << " ~~~> ";
+			//			cout << s << " ~~~> ";
 			if (fwrite(&s, 4096, 1, fout) == -1)
 			{
 				return -1;
